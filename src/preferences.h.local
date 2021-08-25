@@ -1,0 +1,41 @@
+
+#include "defines.h"
+
+#define DEVICE_ID "1208318107"
+
+#ifndef TEMPERATURE_SENSOR
+#define TEMPERATURE_SENSOR SHT21
+#endif
+
+#define AUTH_FINGERPRINT 1
+
+#ifndef DATASENDER
+#define DATASENDER NARODMON
+#endif
+
+#ifndef NARODMON_DEVICENAME
+#define NARODMON_DEVICENAME "WeatherStation"
+#endif
+
+//This is mandatory for narodmon. 
+//Please set your own id in narodmon system
+//#define NARODMON_USER "unknown"
+
+#ifndef _ENABLE_HTTP_SERVER
+#define WIFI_SSID  "your_wifi_ssid"
+#define WIFI_PASSWORD  "your_wifi_password"
+#endif
+
+#define REV_PER_METER  4
+#define SEND_INTERVAL 20
+#define TOKEN "your_api_token"
+#define FINGERPRINT "0E:1B:6C:BA:BD:02:20:60:9A:11:4B:0D:49:25:D5:77:29:58:DA:9A"
+
+
+//Uncomment for debug purposes
+//#define SHT21_DEBUG(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[SHT21][DEBUG]" fmt "\r\n"), ## __VA_ARGS__)
+//#define SHT21_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[SHT21][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
+//#define WEBHOOK_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[WEBHOOK][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
+//#define WEBHOOK_DEBUG(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[WEBHOOK][DEBUG]" fmt "\r\n"), ## __VA_ARGS__)
+//#define NARODMON_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[NARODMON][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
+//#define NARODMON_DEBUG(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[NARODMON][DEBUG]" fmt "\r\n"), ## __VA_ARGS__)

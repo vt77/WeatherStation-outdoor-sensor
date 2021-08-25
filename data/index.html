@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang='en'>
+   <head>
+        <meta name='viewport' content='width=device-width'>
+        <title>AmbientMonitor</title>
+   </head>
+   <body>
+    <a href="javascript:showData()">Refresh</a>&nbsp;|&nbsp;<a href="javascript:showData()">AmbientData</a>&nbsp;|&nbsp;<a href="javascript:showPreferences()">Preferences</a>
+        <div id="data">
+          <h1>Sensors data</h1>
+          <p>
+            <table id="dataTable">
+              <thead><tr><td>Name</td><td>Temperature</td><td>Humidity</td><td>Last seen</td></tr></thead>
+              <tbody></tbody>
+            </table>
+          </p>
+        </div>
+
+        <div id="preferences" style="display:none;">
+        <h1>AmbientMonitor setup</h1><p>Please define your parameters.
+        <br /><form method='POST' action='/preferences' id="s"><h4>Settings</h4>
+          <fieldset><legend>Data Sender</legend>
+          <label>Fingerprnt</label><br /><input type='text' placeholder='fingerprint' name='fingerprint' required="required" pattern="[A-F0-9:]{32,64}" title="Server's TLS fingerprint"/>
+        	<br /><label>Token</label><br /><input type='text' placeholder='token' name='token' id="token" required="required" pattern="[a-z0-9]{1,15}" title="Auth token"/>
+        	<br /><label>Interval</label><br /><input type='number' placeholder='interval' name='interval' min="20" required="required" title="Update interval. Min 20 sec "/>
+	    </fieldset>
+	    <br /><input type='submit' value='Save'/>
+      </form>
+        </p>
+      </div>
+<script >
+
+const intervals = [
+  { label: 'day', seconds: 86400 },
+  { label: 'hour', seconds: 3600 },
+  { label: 'minute', seconds: 60 },
+  { label: 'second', seconds: 1 }
+];
+
+function ago(last_seen)
+{
+  if(last_seen==0) return "Never";
+  const seconds = Math.floor(Date.now() / 1000  - last_seen);
+  const interval = intervals.find(i => i.seconds < seconds);
+  if(!interval) return "TODO : Show date";
+  const count = Math.floor(seconds / interval.seconds);
+  return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;
+}
+
+function showData()
+{
+    document.getElementById("preferences").style.display = 'none';
+    document.getElementById("data").style.display = 'block';
+    const p = new XMLHttpRequest();
+          p.responseType = 'json';
+          p.onload = function() {
+              console.log(this.response['devices']);
+              var tbodyRef = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+              tbodyRef.innerHTML = "";
+              this.response['devices'].forEach(d => {
+                  var newRow = tbodyRef.insertRow(tbodyRef.rows.length);
+                  newRow.insertCell().innerHTML = d['id'];
+                  newRow.insertCell().innerHTML = d['temp'];
+                  newRow.insertCell().innerHTML = d['hum'];
+                  newRow.insertCell().innerHTML = ago(d['last']);
+                });
+              
+          };
+          p.open("GET", '/data', true); 
+          p.send();
+}
+
+function showPreferences()
+{
+    document.getElementById("data").style.display = 'none';
+    document.getElementById("preferences").style.display = 'block';
+    const p = new XMLHttpRequest();
+          p.responseType = 'json';
+          p.onload = function() {
+              var f = document.getElementById("s");
+              ['interval','token','fingerprint'].forEach(el => {
+                  f[el].value = this.response[el];
+              });
+          };
+          p.open("GET", '/preferences', true); 
+          p.send();
+}
+
+</script>   
+</body>
+</html>
