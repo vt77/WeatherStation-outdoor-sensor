@@ -1,6 +1,7 @@
 
 #include "defines.h"
 
+//Usually Mac address of your device
 #define DEVICE_ID "1208318107"
 
 #ifndef TEMPERATURE_SENSOR
@@ -8,6 +9,8 @@
 #endif
 
 #define AUTH_FINGERPRINT 1
+
+#define LEDWINK 0
 
 #ifndef DATASENDER
 #define DATASENDER NARODMON

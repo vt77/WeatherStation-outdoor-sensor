@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 
 #include <FS.h>
 #include <LittleFS.h>
@@ -10,6 +11,9 @@
 
 #include <CaptivePortal.h>
 #include "JsonStaticString.h"
+
+#include <LEDWink.hpp>
+
 
 using namespace vt77;
 
@@ -56,7 +60,32 @@ const get_preferences_t CaptivePortal::preferencesJson = []() -> String {
 #define COLLECTION_DATA_CLASS(a) COLLECTION_CLASS_BUILDER(a)
 #endif
 
+
 RFReceiver rfReceiver;
+
+class LedWinkButtonHandler : public LEDWink
+{
+    private:
+        void onButtonPress(unsigned long ms) override {
+            
+            //Long press 5 seconds reboots device in AP mode 
+            if(ms > 4000)
+            {
+                Serial.println("Erase config");
+                //ESP.eraseConfig();
+                rfReceiver.stopReceive();
+                WiFi.persistent(true);
+                WiFi.disconnect(true);
+            }
+
+            Serial.println("Restart MCU");
+            delay(1000);
+            WiFi.disconnect();
+            ESP.restart();
+        }   
+};
+
+LedWinkButtonHandler ledWinker;
 SensorsCollection<COLLECTION_DATA_CLASS(DATA_FORMAT)> sensorsCollection(rfReceiver,DEVICE_ID);
 
 #ifdef ANOTHER_DEVICE_TEST
@@ -67,48 +96,67 @@ AnotherDevice<SensorsCollection<COLLECTION_DATA_CLASS(DATA_FORMAT)>> anotherDevi
 
 const char * channelNames[] = 
 {
-    "livingr",
-    "bathr",
-    "bedr"
+    "kids",     //Channel 0
+    "bathr",    //Channel 1
+    "bedr",     //Channel 2
+    "livingr"   //Channel 3
 };
+
 
 void setup() {
 
     Serial.begin(115200);
     WiFi.printDiag(Serial);
-
-    Serial.print("Connect to AP ");
-    Serial.println(WiFi.SSID());
     
-    WiFi.mode(WIFI_STA);
-    WiFi.begin();
-    WiFi.setAutoReconnect(true);
+    if (!LittleFS.begin()) {
+      Serial.println("LittleFS mount failed");
+      return;
+    }
 
-    wl_status_t status;
-    while ( ( status = WiFi.status() ) != WL_CONNECTED)
+    ledWinker.init();
+
+    wl_status_t status = WL_IDLE_STATUS;
+    if(WiFi.SSID().isEmpty())
     {
-            if( status == WL_WRONG_PASSWORD || status == WL_CONNECT_FAILED )
+        //Last AP connection failed or button reset occures
+        Serial.println("Using local AP mode");
+        status = WL_CONNECT_FAILED;
+
+    }else{
+
+        Serial.print("Connect to AP ");
+        Serial.println(WiFi.SSID());
+        WiFi.mode(WIFI_STA);
+        WiFi.begin();
+        WiFi.setAutoReconnect(true);
+
+    }
+
+    
+    do{
+            if( status == WL_CONNECT_FAILED || status == WL_WRONG_PASSWORD || status == WL_CONNECT_FAILED )
             {
                 Serial.print("Connection failed : 0x");
                 Serial.println(status,HEX);
                 #ifdef _ENABLE_HTTP_SERVER
                 Serial.println("Start captive portal");
                 captivePortal.start(MODE_LOCAL);
+                ledWinker.setpattern(BLINK_DOUBLE);
                 #endif
+                return;
             }
             Serial.print(".");
             delay(500);
+            ledWinker.setledstatus(wink_status_t::on);
+            delay(200);
+            ledWinker.setledstatus(wink_status_t::off);
     }
+    while ( ( status = WiFi.status() ) != WL_CONNECTED );
 
     delay(2000);
     Serial.println(" Done");
     Serial.print("[WIFI]Connected, IP address: ");
     Serial.println(WiFi.localIP());
-
-    if (!LittleFS.begin()) {
-      Serial.println("LittleFS mount failed");
-      return;
-    }
 
     Serial.println("[WEBSRV]Start");
     captivePortal.start(MODE_PUBLIC);
@@ -135,6 +183,14 @@ void setup() {
 #ifdef DATASENDER
     tasker.attach(deviceconfig.interval ,std::bind([](){
         const char * data = static_cast<const char*>(sensorsCollection);
+
+        if(data == nullptr)
+        {
+            Serial.println("[WARNING][DATASENDER]No devices to send");
+            return;
+        }
+
+        ledWinker.setledstatus(wink_status_t::on);
         Serial.print("[SEND]");
         char timeStr[32];
         time_t now = time(nullptr);
@@ -152,8 +208,17 @@ void setup() {
         datasender.send_data(deviceconfig.token,data);
         Serial.print("[FREEMEM] ");
         Serial.println(ESP.getFreeHeap());
+        ledWinker.setledstatus(wink_status_t::off);
     }));
 #endif
+
+
+    if (!MDNS.begin("ambmon")) {             // Start the mDNS responder for ambmon.local
+        Serial.println("Error setting up MDNS responder!");
+    }
+    MDNS.addService("http", "tcp", 80);
+
+    configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
     Serial.println("Start listener");
 
@@ -162,8 +227,6 @@ void setup() {
     //chan2.setup({500,8,4,2});
     //chan2.setProtocol(vt77::wsproto_t::PROTO_DGR8H);
     rfReceiver.startReceive(); 
-
-    configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 }
 
 void loop() {
@@ -172,4 +235,6 @@ void loop() {
     tasker.process();
 #endif
     rfReceiver.process();
+    ledWinker.process();
+    MDNS.update();
 }

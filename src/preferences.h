@@ -1,13 +1,18 @@
 
 #include "defines.h"
 
-#define DEVICE_ID "ambient"
+//For narodmon
+#define DEVICE_ID "18fe349d6f9d"
+//#define DEVICE_ID "ambient"
 
 #define AUTH_FINGERPRINT 1
 
 
+#define LEDWINK 0
+
+
 #ifndef DATASENDER
-#define DATASENDER WEBHOOK
+#define DATASENDER NARODMON
 #endif
 
 
@@ -39,5 +44,5 @@
 #define WSUNIT_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[WSUNIT][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
 #define WEBHOOK_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[WEBHOOK][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
 #define WEBHOOK_DEBUG(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[WEBHOOK][DEBUG]" fmt "\r\n"), ## __VA_ARGS__)
-//#define NARODMON_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[NARODMON][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
-//#define NARODMON_DEBUG(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[NARODMON][DEBUG]" fmt "\r\n"), ## __VA_ARGS__)
+#define NARODMON_ERROR(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[NARODMON][ERROR]" fmt "\r\n"), ## __VA_ARGS__)
+#define NARODMON_DEBUG(fmt, ...)  Serial.printf_P((PGM_P)PSTR( "[NARODMON][DEBUG]" fmt "\r\n"), ## __VA_ARGS__)

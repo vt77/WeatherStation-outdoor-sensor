@@ -10,7 +10,12 @@
 
 #define MAX_BUFFER_STRING_LENGTH 128
 
+#define NARODMON_PROTO_SENDER
+
+
 namespace vt77 {
+
+
 
     /**
      *  Narodmon protocol handler
@@ -76,7 +81,8 @@ namespace vt77 {
             void send_data(const char * access_token, const char * body) override{
                 WiFiClient client;
                 NARODMON_DEBUG("Connecting to narodmon");
-                if( !client.connect("narodmon.ru", 8283) )
+                //if( !client.connect("narodmon.ru", 8283) )
+                if( !client.connect("192.168.1.28",8283 ))
                 {
                     NARODMON_ERROR("Can't connect to narodmon");
                     return;

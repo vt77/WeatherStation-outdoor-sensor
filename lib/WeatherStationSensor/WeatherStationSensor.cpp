@@ -86,6 +86,14 @@ bool parse_weather_data_VT77(WeatherData *wd, const uint32_t data)
       return true;
 }
 
+bool parse_weather_data_FANJU(WeatherData *wd, const uint32_t data)
+{
+      wd->temp = (( (data >> 12) & 0xFFF ) - 1220 ) * .5556;
+      wd->hum =  (((data >> 8) & 0xF) * 10) + ((data >> 4) & 0xF);
+      wd->chan = data & 0x3;
+      wd->batt = data >> 26 & 0x1;
+      return true;
+}
 
 bool parse_weather_debug(WeatherData *wd, const uint32_t data)
 {
@@ -96,17 +104,19 @@ using processFunction =  std::function<bool(WeatherData *wd, const uint32_t data
 const processFunction protocolHandlers[] = {
     parse_weather_debug,
     parse_weather_data_DGR8S,
-    parse_weather_data_DGR8H
+    parse_weather_data_DGR8H,
+    parse_weather_data_FANJU,
 };
 
 const char * proto_names[] = {
     "DUMP",
     "DGR8S",
-    "DGR8H"
+    "DGR8H",
+    "FANJU"
 };
 
 
-void WeatherStationSensor::parse(uint8_t id, uint32_t data)
+void WeatherStationSensor::parse(uint8_t id, uint32_t data, uint8_t proto)
 {
     WSUNIT_DEBUG("[DATA]Device : 0x%X  Data 0x%X",id,data);
 
@@ -131,9 +141,9 @@ void WeatherStationSensor::parse(uint8_t id, uint32_t data)
 
     WeatherData weather_data;
     weather_data.id = id;
-    if( protocolHandlers[this->proto](&weather_data,data) )
+    if( protocolHandlers[proto](&weather_data,data) )
     {
-        WSUNIT_DEBUG("[DATA][%s][0x%X][%d] Temp: %d  Hum: %d ",proto_names[this->proto],id,weather_data.chan,weather_data.temp,weather_data.hum);
+        WSUNIT_DEBUG("[DATA][%s][0x%X][%d] Temp: %d  Hum: %d ",proto_names[proto],id,weather_data.chan,weather_data.temp,weather_data.hum);
         this->onWeatherData(weather_data);
     }
 }
@@ -162,15 +172,21 @@ void WeatherStationSensor::process(rfpulse pulse)
 	if(periods >= timings.gap)
 	{
 
-        //WSUNIT_DEBUG("[RESET]Len : %d  Periods :  %d",bits_count,periods);
+        //if(bits_count > 16)
+        //    WSUNIT_DEBUG("[RESET]Len : %d  Periods :  %d",bits_count,periods);
 
 		if(bits_count == PACKET_LENGTH)
         {
-			parse(device_id,data_byte);
+			parse(device_id,data_byte,this->proto);
         }
 		//This is ugly hack because some devices sending 0 in the end of packet
 		else if(bits_count == PACKET_LENGTH + 1)
-			parse(device_id,data_byte>>1);
+			parse(device_id,data_byte>>1,this->proto);
+        else if(bits_count == 40)
+        {
+            //FanJu sensor
+            parse(device_id,data_byte,wsproto_t::PROTO_FANJU);
+        }
 
 		device_id = 0;
 		bits_count = 0;

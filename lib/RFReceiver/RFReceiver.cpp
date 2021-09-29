@@ -85,10 +85,15 @@ void RFReceiver::stopReceive(){
         detachInterrupt(RF_RECEIVER_PIN);
 }
 
+int RFReceiver::count()
+{
+	return _pulses.count();
+}
+
 void RFReceiver::process(){
     unsigned int count =  _pulses.count();
     if(count > 0)
-    {		
+    {	
         rfpulse pulse = _pulses.get();		
         for(int i=0;i<listeners_count;i++)
         {

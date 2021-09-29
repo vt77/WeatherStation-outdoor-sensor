@@ -14,7 +14,7 @@
 namespace vt77{
 
 
-#define MAX_SENSORS_JSON_STRING_LENGTH 256
+#define MAX_SENSORS_JSON_STRING_LENGTH 512
 
 typedef struct{
     const char * name;
@@ -31,9 +31,10 @@ typedef struct{
     }
 }device_desc_t;
 
-#define DEVICES_COUNT 3
+#define DEVICES_COUNT 4
 
 device_desc_t devices[DEVICES_COUNT] =  {
+    {nullptr,0},
     {nullptr,0},
     {nullptr,0},
     {nullptr,0},
@@ -107,15 +108,23 @@ class SensorsCollection: public WeatherStationSensor
 
         operator const char*()  {
                 dataSenderBuffer.start(name);
+                int total_found = 0;
                 for(int i=0;i<DEVICES_COUNT;i++)
                 {   
                     if(devices[i].avaliable())
                     {
                         dataSenderBuffer.insert(&devices[i]);
                         devices[i].ready = false;
+                        total_found++;
                     }
                 }
                 dataSenderBuffer.close();
+
+                SENSORS_DEBUG("[SENSORSCOLLECTION][DEVICES]%d",total_found);
+                if(total_found == 0)
+                {
+                    return nullptr;
+                }
                 return (const char*)dataSenderBuffer;
         }
 
@@ -148,7 +157,7 @@ class WebhookProtoAmbient : public SensorsCollectionJson{
 };
 
 
-#ifdef NarodmonProto
+#ifdef NARODMON_PROTO_SENDER
 
 //Class for narodmon handler
 class NarodmonProtoAmbient : public NarodmonProto

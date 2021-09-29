@@ -3,7 +3,7 @@
 #include <LittleFS.h>
 
 const byte DNS_PORT = 53;
-IPAddress apIP(172, 217, 28, 1);
+IPAddress apIP(10, 1, 1, 1);
 DNSServer dnsServer;
 ESP8266WebServer webServer(80);
 
@@ -13,23 +13,24 @@ void update_wifi_settings(const char * ssid, const char * password)
 {
     //struct station_config stationConf;
     //wifi_station_get_config (&stationConf);
-    //ESP.eraseConfig();
     if(WiFi.SSID() != ssid || WiFi.psk() != password)
     {  
             Serial.println("Save new WiFi settings");
             WiFi.persistent(true);
             WiFi.begin(ssid, password); //start station with new credentials
-            //WiFi.mode(WIFI_STA);
     }
 }
+
 
 void start_local_server()
 {
     dnsServer.start(DNS_PORT, "*", apIP);
+    webServer.serveStatic("/wifisettings",LittleFS,"wifisettings.html");
     webServer.onNotFound([]() {
-        //webServer.send(200, "text/html", responseHTML);
-        webServer.serveStatic("wifisettings.html",LittleFS,"wifisettings.html");
+        webServer.sendHeader("Location", "/wifisettings",true);
+        webServer.send(302, "text/plain",""); 
     });
+
     webServer.on("/wifisave", []() {
           if (webServer.method() != HTTP_POST) {
               webServer.send(405, "text/plain", "Method Not Allowed");
@@ -47,7 +48,6 @@ void start_local_server()
         webServer.send(200, "text/html", "<h2>Settings saved.</h2> Device will be restarted in few seconds");
         delay(4000);
         ESP.restart();
-
     });
 
     webServer.begin();

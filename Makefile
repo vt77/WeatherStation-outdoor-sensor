@@ -12,4 +12,7 @@ monitor:
 	minicom -b 115200 -o -D /dev/ttyUSB0
 
 utest:
-	pio test -c ci.ini 
+	pio test -c ci.ini
+ 
+exdecode:
+	pio device monitor -b115200 

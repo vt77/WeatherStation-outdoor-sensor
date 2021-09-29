@@ -26,7 +26,8 @@ typedef struct{
 typedef enum {
     PROTO_DEBUG = 0,
     PROTO_DGR8S = 1,
-    PROTO_DGR8H = 2
+    PROTO_DGR8H = 2,
+    PROTO_FANJU = 3,
 } wsproto_t;
 
 using WeatherSensorCallback = std::function<void(WeatherData wd)>;
@@ -41,7 +42,7 @@ class WeatherStationSensor : public RFDataListener{
     protected:
         virtual void onWeatherData(const WeatherData wd) = 0;
     private:
-        void parse(uint8_t id, uint32_t data);
+        void parse(uint8_t id, uint32_t data,uint8_t proto);
         rftimings_t timings;
         wsproto_t proto;
         uint32_t data_byte;
