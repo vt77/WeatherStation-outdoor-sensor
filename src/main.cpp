@@ -71,8 +71,9 @@ class LedWinkButtonHandler : public LEDWink
             //Long press 5 seconds reboots device in AP mode 
             if(ms > 4000)
             {
+                
                 Serial.println("Erase config");
-                //ESP.eraseConfig();
+                ESP.eraseConfig();
                 rfReceiver.stopReceive();
                 WiFi.persistent(true);
                 WiFi.disconnect(true);
@@ -82,6 +83,7 @@ class LedWinkButtonHandler : public LEDWink
             delay(1000);
             WiFi.disconnect();
             ESP.restart();
+            
         }   
 };
 
@@ -119,12 +121,12 @@ void setup() {
     if(WiFi.SSID().isEmpty())
     {
         //Last AP connection failed or button reset occures
-        Serial.println("Using local AP mode");
+        Serial.println("[WIFI]Using local AP mode");
         status = WL_CONNECT_FAILED;
 
     }else{
 
-        Serial.print("Connect to AP ");
+        Serial.print("[WIFI]Connect to AP ");
         Serial.println(WiFi.SSID());
         WiFi.mode(WIFI_STA);
         WiFi.begin();
@@ -136,10 +138,10 @@ void setup() {
     do{
             if( status == WL_CONNECT_FAILED || status == WL_WRONG_PASSWORD || status == WL_CONNECT_FAILED )
             {
-                Serial.print("Connection failed : 0x");
+                Serial.print("[WIFI]Connection failed : 0x");
                 Serial.println(status,HEX);
                 #ifdef _ENABLE_HTTP_SERVER
-                Serial.println("Start captive portal");
+                Serial.println("[WIFI]Start captive portal");
                 captivePortal.start(MODE_LOCAL);
                 ledWinker.setpattern(BLINK_DOUBLE);
                 #endif

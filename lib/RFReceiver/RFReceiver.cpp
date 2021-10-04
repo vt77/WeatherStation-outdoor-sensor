@@ -21,7 +21,11 @@ class RFData : DataSequence<rfpulse>{
 	};
         
 	unsigned int count() const{
-		return (_write_ptr - _read_ptr) % PTR_MASK; 	
+		//while(std::atomic_flag_test_and_set_explicit(&lock, std::memory_order_acquire))
+		//This is atomic operation
+		volatile unsigned int head = _write_ptr; 
+		//std::atomic_flag_clear_explicit(&lock, std::memory_order_release);
+		return (head - _read_ptr) % PTR_MASK; 	
 	};
         
 	rfpulse last() const{
@@ -34,7 +38,9 @@ class RFData : DataSequence<rfpulse>{
 
         void put(rfpulse p){
 		//Save item in buffer abd increment
+		//while(std::atomic_flag_test_and_set_explicit(&lock, std::memory_order_acquire))
 		_data[_write_ptr++ % PTR_MASK]  = p;
+		//std::atomic_flag_clear_explicit(&lock, std::memory_order_release);
 	};
 
         rfpulse get(){
@@ -62,7 +68,8 @@ class RFData : DataSequence<rfpulse>{
 	rfpulse _data[BUFFER_SIZE];
 	//std::unique_ptr<T[]> buf_;
  	unsigned int _read_ptr;
-	unsigned int _write_ptr;	
+	unsigned int _write_ptr;
+	//std::atomic_flag lock = ATOMIC_FLAG_INIT;
 };
 
 RFData _pulses;

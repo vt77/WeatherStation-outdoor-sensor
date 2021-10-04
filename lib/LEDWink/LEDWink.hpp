@@ -32,10 +32,9 @@ class LEDWink{
         unsigned long last_time;
         blink_pattern* pattern = nullptr;
         unsigned int pattern_pos = 0;
-        virtual void onButtonPress(unsigned long ms);
-        //{
+        virtual void onButtonPress(unsigned long ms){
             //Override to handle button press
-        //}
+        }
  
     public:
         bool setledstatus(wink_status_t status){
