@@ -1,0 +1,28 @@
+; Version : LOCAL
+; Job     : Z:\Rest\ESPto433\V2\PCB\V2.pcb
+; User    : DESKTOP-K7BKDL1:life
+; Date    : Mon Oct 04 20:03:48 2021
+; Format  : 3.3 / Absolute / MM / Leading
+; Contents: Thru / Mill / Plated
+M48
+METRIC,TZ
+FMAT,2
+ICI,OFF
+T06C0.5000
+%
+M71
+G90
+G93X0Y0
+T06
+G00X39278Y39628
+M15
+G01X38778
+X39778
+M16
+G00X39278Y46778
+M15
+G01X38778
+X39778
+M17
+T00
+M30
