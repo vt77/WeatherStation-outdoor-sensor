@@ -36,5 +36,5 @@ __DNP - not soldered__
 
 
 ## Author 
-Thanks to Aleksandr Samoylov (root at lifeslice.ru ) for creating this part of project
+Thanks to Alexander Samoilov (root at lifeslice.ru ) for creating this part of project
 
